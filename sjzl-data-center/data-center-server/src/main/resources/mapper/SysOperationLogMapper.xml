@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.SysOperationLogMapper">
+
+    <select id="userLoginLineChart" resultType="java.util.Map">
+        SELECT
+        DATE_FORMAT(CREATETIME, '%Y-%m-%d') "x",
+        count(1) "y"
+        FROM
+        sys_operation_log
+        <where>
+            LOGNAME = '统一用户登录'
+            AND SUCCEED ='成功'
+            <if test="endDate!=null and endDate!=''">
+                AND DATE_ADD( STR_TO_DATE( #{endDate}, '%Y-%m-%d' ), INTERVAL 1 DAY ) > CREATETIME
+            </if>
+            <if test="startDate!=null and startDate!=''">
+                AND STR_TO_DATE( #{startDate}, '%Y-%m-%d' ) &lt;= CREATETIME
+            </if>
+        </where>
+        GROUP BY DATE_FORMAT(CREATETIME, '%Y-%m-%d') order by DATE_FORMAT(CREATETIME, '%Y-%m-%d')
+
+    </select>
+    <select id="queryList" resultType="com.vdata.cloud.datacenter.vo.ULogGroupVO">
+        SELECT
+        s.*,
+        b.NAME groupName
+        FROM
+        (
+        SELECT
+        sol.ID,
+        sol.LOGTYPE,
+        sol.LOGNAME,
+        IFNULL(
+        sol.LOGINNAME,(
+        SELECT
+        username
+        FROM
+        base_user
+        WHERE
+        id = sol.USERID
+        LIMIT 1
+        )) LOGINNAME,
+        IFNULL(
+        sol.USERID,(
+        SELECT
+        id
+        FROM
+        base_user
+        WHERE
+        username = sol.LOGINNAME
+        LIMIT 1
+        )) USERID,
+        sol.CLASSNAME,
+        sol.METHOD,
+        sol.CREATETIME,
+        sol.SUCCEED,
+        sol.MESSAGE,
+        sol.IP
+        FROM
+        sys_operation_log sol
+        ) s
+        LEFT JOIN (
+        SELECT
+        bg.NAME,
+        bugr.fk_base_user,
+        bugr.fk_base_group
+        FROM
+        base_group bg,
+        base_user_group_rel bugr
+        WHERE
+        bg.id = bugr.fk_base_group
+        AND bg.group_type = 4
+        ) b ON b.fk_base_user = s.USERID
+        <where>
+            <if test="uLogVO.logname!=null and uLogVO.logname!=''">
+                and s.logname = #{uLogVO.logname}
+            </if>
+            <if test="uLogVO.loginname!=null and uLogVO.loginname!=''">
+                and s.loginname = #{uLogVO.loginname}
+            </if>
+            <if test="uLogVO.succeed!=null and uLogVO.succeed!=''">
+                and s.succeed = #{uLogVO.succeed}
+            </if>
+            <if test="uLogVO.logType!=null and uLogVO.logType!=''">
+                and s.logType = #{uLogVO.logType}
+            </if>
+            <if test="uLogVO.userId!=null and uLogVO.userId!=''">
+                and s.userId = #{uLogVO.userId}
+            </if>
+            <if test="uLogVO.endDate!=null ">
+                and s.createtime &lt; #{uLogVO.endDate}
+            </if>
+            <if test="uLogVO.startDate!=null ">
+                and s.createtime &gt; #{uLogVO.startDate}
+            </if>
+            <if test="uLogVO.groupId!=null and   uLogVO.groupId!='' ">
+                and b.fk_base_group = #{uLogVO.groupId}
+            </if>
+        </where>
+        ORDER BY
+        createtime DESC
+
+    </select>
+    <select id="getBaseGroupVO" resultType="com.vdata.cloud.datacenter.vo.BaseGroupVO">
+        SELECT
+        bg.NAME,
+        bugr.fk_base_user,
+        bugr.fk_base_group
+        FROM
+        base_group bg,
+        base_user_group_rel bugr
+        WHERE
+        bg.id = bugr.fk_base_group
+        AND bg.group_type = 4
+        AND  fk_base_user = #{userId}
+        limit 1
+    </select>
+</mapper>

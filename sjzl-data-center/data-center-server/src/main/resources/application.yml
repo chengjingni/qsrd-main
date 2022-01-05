@@ -1,0 +1,177 @@
+server:
+  ipAddr: 127.0.0.1
+  port: 9999
+  servlet:
+    context-path: /api
+
+#配置mybatis
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.vdata.cloud.*.entitym'y
+  configuration:
+    #    map-underscore-to-camel-case: true
+    use-generated-keys: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+auth:
+  serviceId: auth
+  user:
+    token-header: Authorization
+  client:
+    token-header: x-client-token
+    id: admin  #不填则默认读取spring.application.name
+    secret: 123456
+
+
+
+jwt:
+  token-header: Authorization
+  expire: 86400
+  rsa-secret: xx1WET12^%3^(WE45
+
+client:
+  id: auth
+  secret: 123456
+  token-header: x-client-token
+  expire: 7200
+  rsa-secret: x2318^^(*WRYQWR(QW&T
+
+logging:
+  level:
+    #        tk.mybatis: DEBUG
+    com.vdata.cloud.auth: DEBUG
+
+
+spring:
+  redis:
+    #部署到47时是127.0.0.1
+    host: localhost
+    port: 6379
+    database: 0
+    #47上的redis需要密码
+    #password: foobared
+    expire: 2592000
+    jedis:
+      pool:
+        max-idle: 8
+        min-idle: 0
+        max-active: 8
+        max-wait: -1ms
+        timeout: 0
+  datasource:
+    #name: test
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/qsrd_main?useUnicode=true&characterEncoding=UTF8&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true&autoReconnect=true&rewriteBatchedStatements=true
+    username: root
+    password: 8TYzSGAhqaS5KPiA
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    filters: stat
+    maxActive: 20
+    initialSize: 1
+    maxWait: 60000
+    minIdle: 1
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxOpenPreparedStatements: 20
+  data:
+    mongodb:
+      #uri: mongodb://botsadmin:botspassword@192.168.0.182:27017,192.168.0.182:27017/bots_app
+      host: localhost
+      port: 27017
+      database: qsrd
+      #username: botsadmin
+      #password: botspassword
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  sleuth:
+    enabled: true
+    http:
+      legacy:
+        enabled: true
+
+# 必须配置
+#feign:
+#  httpclient:
+#    enabled: false
+#  okhttp:
+#    enabled: true
+
+ribbon:
+  eureka:
+    enabled: false
+  ReadTimeout: 100000
+  ConnectTimeout: 100000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+  OkToRetryOnAllOperations: false
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 1000 ##并发执行的最大线程数，默认10
+      maxQueueSize: 1000 ##BlockingQueue的最大队列数
+      queueSizeRejectionThreshold: 500 ##即使maxQueueSize没有达到，达到queueSizeRejectionThreshold该值后，请求也会被拒绝
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 110000
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  security:
+  #    enabled: false
+
+
+
+
+
+sample:
+  zipkin:
+    # When enabled=false, traces log to the console. Comment to send to zipkin
+    enabled: false
+
+
+
+
+# 配置swagger
+swagger:
+  enabled: true
+  base-package: com.vdata.cloud.data
+  title: datacenter
+  version: 1.0.0.SNAPSHOT
+  description: 管理后端服务
+  contact:
+    name: admin
+
+#redis-cache 相关
+redis:
+  pool:
+    maxActive: 300
+    maxIdle: 100
+    maxWait: 1000
+  host: ${REDIS_HOST:localhost}
+  port:  ${REDIS_PORT:6379}
+  password:
+  timeout: 2000
+  # 服务或应用名
+  sysName: server
+  enable: true
+  database: 0
+
+
+sign:
+  timeout: 3600

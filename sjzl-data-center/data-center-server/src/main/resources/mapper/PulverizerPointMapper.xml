@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.PulverizerPointMapper">
+
+
+    <select id="page" resultType="com.vdata.cloud.datacenter.vo.PulverizerPointVO">
+        SELECT
+        id "id",
+        `no` "no",
+        point_name "pointName",
+        getValue ( 'sensor_type', sensor_type_code ) "sensorType",
+        sensor_type_code "sensorTypeCode",
+        dcs_data_identifier "dcsDataIdentifier",
+        getValue ( 'test_item', test_item_code ) "testItem",
+        unit,
+        position_code "positionCode",
+        getValue('position',position_code) "positionValue",
+        upper_limit "upperLimit",
+        lower_limit "lowerLimit",
+        follow,
+        pulverizer_code "pulverizerCode",
+        getValue('pulverizer',pulverizer_code) "pulverizerName",
+        alarm
+        FROM
+        pulverizer_point
+        <where>
+            delete_date IS NULL
+            <if test="obj.code!=null and obj.code!='' ">
+                AND pulverizer_code = #{obj.code}
+            </if>
+            <if test="obj.positionCode!=null and obj.positionCode!='' ">
+                AND position_code = #{obj.positionCode}
+            </if>
+        </where>
+        ORDER BY
+        `no` ASC
+    </select>
+    <select id="get" resultType="com.vdata.cloud.datacenter.vo.PulverizerPointVO">
+        SELECT
+        id "id",
+        `no` "no",
+        point_name "pointName",
+        getValue ( 'sensor_type', sensor_type_code ) "sensorType",
+        dcs_data_identifier "dcsDataIdentifier",
+        getValue ( 'test_item', test_item_code ) "testItem",
+        unit,
+        pulverizer_code "pulverizerCode",
+        sensor_type_code "sensorTypeCode",
+        test_item_code "testItemCode",
+        position_code "positionCode",
+        getValue('position',position_code) "positionValue",
+        upper_limit "upperLimit",
+        lower_limit "lowerLimit",
+        follow,
+        alarm
+        FROM
+        pulverizer_point
+        WHERE id = #{id} AND   delete_date IS NULL
+    </select>
+    <select id="details" resultType="com.vdata.cloud.datacenter.vo.PulverizerPointRedisVO">
+    SELECT
+        id,
+        pulverizer_code "pulverizerCode",
+        getValue ( 'pulverizer', pulverizer_code ) "pulverizerValue",
+        sensor_type_code "sensorTypeCode",
+        getValue('sensor_type',sensor_type_code) "sensorTypeValue",
+        point_name "pointName",
+        test_item_code "testItemCode",
+        getValue ( 'test_item', test_item_code ) "testItemValue",
+        position_code "positionCode",
+        getValue ( 'position', position_code ) "positionValue",
+        unit "unit",
+        NO "no",
+        enable "enable",
+        dcs_data_identifier "dcsDataIdentifier",
+        upper_limit "upperLimit",
+        lower_limit "lowerLimit",
+        follow,
+        alarm
+    FROM
+        pulverizer_point
+    WHERE  delete_date IS NULL
+    </select>
+    <select id="existsNoCountByPulverizerCode" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        pulverizer_point
+        WHERE
+        pulverizer_code = #{pulverizerCode}
+        AND NO = #{no}
+        AND delete_date IS NULL
+        <if test="id!=null  and id!=''">
+            AND id != #{id}
+        </if>
+    </select>
+
+</mapper>

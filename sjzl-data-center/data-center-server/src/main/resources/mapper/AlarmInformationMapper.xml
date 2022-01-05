@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.AlarmInformationMapper">
+    <update id="augmentCount">
+        UPDATE alarm_information SET `count`=`count`+1 WHERE id = #{id}
+    </update>
+
+    <select id="page" resultType="com.vdata.cloud.datacenter.vo.AlarmInformationVO">
+        SELECT
+        ai.id "id",
+        alarm_time "alarmTime",
+        abnormal_code "abnormalCode",
+        getValue ( 'abnormal', abnormal_code ) "abnormalValue",
+        pulverizer_point_id "pulverizerPointId",
+        pp.point_name "pointName",
+        detection_value "detectionValue",
+        pp.pulverizer_code "pulverizerCode",
+        getValue( 'pulverizer' ,pp.pulverizer_code) "pulverizerValue" ,
+        count "count",
+        alarm_description "alarmDescription",
+        verify_result "verifyResult",
+        CASE
+        verify_result
+        WHEN 1 THEN
+        '误报'
+        WHEN 2 THEN
+        '真实故障'
+        END "verifyResultValue",
+        verify_description "verifyDescription",
+        result_status "resultStatus",
+        CASE
+        result_status
+        WHEN 1 THEN
+        '核实中'
+        WHEN 2 THEN
+        '已核实'
+        WHEN 3 THEN
+        '处理中'
+        WHEN 4 THEN
+        '已处理'
+        else '未处理'
+        END "resultStatusValue",
+        process_description "processDescription",
+        finish_date "finishDate",
+        ai.position_code "positionCode",
+        possible_cause "possibleCause",
+        proposal "proposal",
+        getValue ( 'position', ai.position_code ) "positionValue",
+        -- 待补充逻辑
+        case when pulverizer_point_id is not null then pp.no
+        else (
+        SELECT
+        GROUP_CONCAT( p.NO )
+        FROM
+        alarm_point a
+        LEFT JOIN pulverizer_point p ON pulverizer_point_id = p.id
+        WHERE
+        a.pulverizer_code = pp.pulverizer_code
+        AND abnormal_code = alarm_code
+        )
+        end nos
+        FROM
+        alarm_information ai
+        LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+        WHERE 1=1
+        <if test="whereSql!=null and whereSql!=''">
+            AND ${whereSql}
+        </if>
+        <if test="alarmPageVO.pulverizerCode!=null and alarmPageVO.pulverizerCode!=''">
+            AND pp.pulverizer_code= #{alarmPageVO.pulverizerCode}
+        </if>
+        <if test="alarmPageVO.verifyResult!=null and alarmPageVO.verifyResult>0">
+            AND ai.verify_result= #{alarmPageVO.verifyResult}
+        </if>
+        <if test="alarmPageVO.startDate!=null  and alarmPageVO.startDate!=''">
+            AND STR_TO_DATE(DATE_FORMAT(alarm_time,'%Y-%m-%d'),'%Y-%m-%d') <![CDATA[ >=  ]]>
+            STR_TO_DATE(#{alarmPageVO.startDate},'%Y-%m-%d')
+        </if>
+        <if test="alarmPageVO.endDate!=null and alarmPageVO.endDate!=''">
+            AND STR_TO_DATE(DATE_FORMAT(alarm_time,'%Y-%m-%d'),'%Y-%m-%d') <![CDATA[ <=  ]]>
+            STR_TO_DATE(#{alarmPageVO.endDate},'%Y-%m-%d')
+        </if>
+        <if test="alarmPageVO.point!=null and  alarmPageVO.point>0">
+            AND pp.no = #{alarmPageVO.point}
+        </if>
+        <if test="alarmPageVO.resultStatus!=null and  alarmPageVO.resultStatus==-1">
+            AND ai.result_status is null
+        </if>
+        <if test="alarmPageVO.resultStatus!=null and  alarmPageVO.resultStatus!=-1">
+            AND ai.result_status = #{alarmPageVO.resultStatus}
+        </if>
+        <if test="alarmPageVO.abnormalCode!=null and  alarmPageVO.abnormalCode!=''">
+            AND ai.abnormal_code = #{alarmPageVO.abnormalCode}
+        </if>
+
+        <if test="alarmPageVO.positionCode!=null and  alarmPageVO.positionCode!=''">
+            AND ai.position_code = #{alarmPageVO.positionCode}
+        </if>
+        order by alarm_time
+        <if test="alarmPageVO.asc==null">
+            desc
+        </if>
+    </select>
+    <!-- <select id="trendOfStatistical" resultType="java.util.Map">
+         select
+         CASE verify_result
+         WHEN 1 THEN '误报'
+         WHEN 2 THEN '真实报警' END "verify_result",
+         MONTH(alarm_time) "month",
+         count(1) "count"
+         from alarm_information ai
+         LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+         WHERE
+         <if test="pulverizerCode!=null and  pulverizerCode!=''">
+             #{pulverizerCode} = pp.pulverizer_code
+             AND
+         </if>
+         <if test="year!=null and year>0">
+             YEAR(alarm_time) = #{year}
+             AND
+         </if>
+         verify_result is not null
+         AND verify_result in (1,2)
+         GROUP BY CASE verify_result
+         WHEN 1 THEN '误报'
+         WHEN 2 THEN '真实报警' END ,MONTH(alarm_time)
+         ORDER BY MONTH(alarm_time)
+     </select>-->
+
+    <select id="trendOfStatistical" resultType="java.util.Map">
+        select
+        verify_result "verify_result",
+        MONTH(alarm_time) "month",
+        count(1) "count"
+        from alarm_information ai
+        LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+        <where>
+            <if test="pulverizerCode!=null and  pulverizerCode!=''">
+                AND pp.pulverizer_code = #{pulverizerCode}
+            </if>
+            <if test="year!=null and year>0">
+                AND YEAR(alarm_time) = #{year}
+            </if>
+            AND verify_result is not null
+            AND verify_result in (1,2)
+        </where>
+        GROUP BY verify_result,MONTH(alarm_time)
+        ORDER BY MONTH(alarm_time)
+    </select>
+    <select id="faultStatistics" resultType="java.util.Map">
+        select
+        verify_result "verify_result",
+        getValue('abnormal',abnormal_code) "abnormalValue",
+        count(1) "count"
+        from alarm_information ai
+        LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+        <where>
+            <if test="pulverizerCode!=null and  pulverizerCode!=''">
+                AND pp.pulverizer_code = #{pulverizerCode}
+            </if>
+            <if test="year!=null and year>0">
+                AND YEAR(alarm_time) = #{year}
+            </if>
+            AND verify_result is not null
+            AND verify_result in (1,2)
+        </where>
+
+        GROUP BY verify_result,getValue('abnormal',abnormal_code)
+    </select>
+    <select id="realTimeAlarm" resultType="com.vdata.cloud.datacenter.vo.RealTimeAlarmVO">
+    SELECT
+        t1.pulverizer,
+        t1.position,
+        t1.running,
+        t1.count
+    FROM
+        (
+        SELECT
+            pulverizer.
+        VALUE
+            "pulverizer",
+            position.
+        VALUE
+            "position",
+        IF
+            ( sum( IF ( ai.result_status != 4, 1, 0 ))> 0, '异常', '正常' ) "running",
+            sum(
+            IF
+            ( ai.result_status != 4, 1, 0 )) "count",
+            max( pulverizer.CODE ),
+            max( position.CODE )
+        FROM
+            ( SELECT * FROM pulverizer_point ORDER BY pulverizer_code, position_code ) pp
+            LEFT JOIN alarm_information ai ON ( pp.id = ai.pulverizer_point_id )
+            LEFT JOIN ( SELECT * FROM base_dict WHERE type = 'pulverizer' ) pulverizer ON pulverizer.CODE = pp.pulverizer_code
+            LEFT JOIN ( SELECT * FROM base_dict WHERE type = 'position' ) position ON position.CODE = pp.position_code
+        GROUP BY
+            pulverizer.
+        VALUE
+            ,
+            position.
+        VALUE
+
+        ORDER BY
+            max( pulverizer.CODE ),
+            max( position.CODE )
+        ) t1
+    </select>
+    <select id="pulverizerRealTimeAlarm" resultType="com.vdata.cloud.datacenter.entity.AlarmInformation">
+        SELECT
+            ai.*
+        FROM
+            alarm_information ai
+            JOIN pulverizer_point pp ON ( ai.pulverizer_point_id = pp.id )
+        WHERE
+            pp.pulverizer_code = #{pulverizerCode}
+    </select>
+    <select id="years" resultType="java.lang.String">
+    SELECT
+        DISTINCT YEAR( alarm_time ) alarm_time
+    FROM
+        alarm_information
+    ORDER BY
+        alarm_time
+    </select>
+    <select id="count" resultType="java.util.Map">
+        <![CDATA[
+
+
+                        SELECT
+                                                IFNULL( count(*), 0 ) "0",
+                                                IFNULL( sum( IF ( DATE_FORMAT( CURRENT_TIMESTAMP, '%Y%m%d' ) = DATE_FORMAT( alarm_time, '%Y%m%d' ), 1, 0 )), 0 ) "1",
+                                                IFNULL(
+                                                    sum(
+                                                    IF
+                                                    (( result_status < 3 OR result_status IS NULL ) AND ( verify_result = 2 OR verify_result IS NULL ), 1, 0 )),
+                                                    0
+                                                ) "2",
+                                                IFNULL( sum( IF ( result_status = 3, 1, 0 )), 0 ) "3",
+                                                IFNULL(
+                                                    sum(
+                                                    IF
+                                                    (( result_status <= 3 OR result_status IS NULL ) AND ( verify_result = 2 OR verify_result IS NULL ), 1, 0 )),
+                                                    0
+                                                ) "4"
+                                            FROM
+                                                alarm_information
+
+
+        ]]>
+            </select>
+    <select id="hisTrueFaultByPulverizer" resultType="java.util.Map">
+        select
+        verify_result "verify_result",
+        ifnull(getValue('pulverizer',pp.pulverizer_code),'其他') "pulverizerValue",
+        count(1) "count"
+        from alarm_information ai
+        LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+        WHERE
+        <if test="pulverizerCode!=null and  pulverizerCode!=''">
+            #{pulverizerCode} = pp.pulverizer_code
+            AND
+        </if>
+        <if test="year!=null and year>0">
+            YEAR(alarm_time) = #{year}
+            AND
+        </if>
+        verify_result is not null
+        AND verify_result in (1,2)
+        GROUP BY verify_result,ifnull(getValue('pulverizer',pp.pulverizer_code),'其他')
+    </select>
+    <select id="getAlarmInformation" resultType="com.vdata.cloud.datacenter.vo.AlarmInformationVO">
+        SELECT
+        ai.id "id",
+        alarm_time "alarmTime",
+        abnormal_code "abnormalCode",
+        getValue ( 'abnormal', abnormal_code ) "abnormalValue",
+        pulverizer_point_id "pulverizerPointId",
+        pp.point_name "pointName",
+        detection_value "detectionValue",
+        pp.pulverizer_code "pulverizerCode",
+        getValue( 'pulverizer' ,pp.pulverizer_code) "pulverizerValue" ,
+        count "count",
+        alarm_description "alarmDescription",
+        verify_result "verifyResult",
+        CASE
+        verify_result
+        WHEN 1 THEN
+        '误报'
+        WHEN 2 THEN
+        '真实故障'
+        END "verifyResultValue",
+        verify_description "verifyDescription",
+        result_status "resultStatus",
+        CASE
+        result_status
+        WHEN 1 THEN
+        '核实中'
+        WHEN 2 THEN
+        '已核实'
+        WHEN 3 THEN
+        '处理中'
+        WHEN 4 THEN
+        '已处理'
+        else '未处理'
+        END "resultStatusValue",
+        process_description "processDescription",
+        finish_date "finishDate",
+        ai.position_code "positionCode",
+        possible_cause "possibleCause",
+        proposal "proposal",
+        getValue ( 'position', ai.position_code ) "positionValue",
+        case when   pulverizer_point_id is not  null  then   pp.no
+--        todo 待补充逻辑
+				else    (
+		SELECT
+			GROUP_CONCAT( p.NO )
+		FROM
+			alarm_point a
+			LEFT JOIN pulverizer_point p ON pulverizer_point_id = p.id
+		WHERE
+			a.pulverizer_code = pp.pulverizer_code
+			AND abnormal_code = alarm_code
+		)
+				end  nos
+        FROM
+        alarm_information ai
+        LEFT JOIN pulverizer_point pp ON ai.pulverizer_point_id = pp.id
+        WHERE ai.id = #{id}
+    </select>
+</mapper>

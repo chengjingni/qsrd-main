@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.AbnormalDetailMapper">
+
+    <select id="abnormalDetailVOIPage" resultType="com.vdata.cloud.datacenter.vo.AbnormalDetailVO">
+        SELECT
+        id "id",
+        alarm_information_id "alarmInformationId",
+        pulverizer_point_id "pulverizerPointId",
+        ( SELECT point_name FROM pulverizer_point WHERE id = pulverizer_point_id LIMIT 1 ) "pulverizerPointName",
+        alarm_time "alarmTime",
+        abnormal_code "abnormalCode",
+        getValue ( 'abnormal', abnormal_code ) "abnormalValue",
+        detection_value "detectionValue",
+        alarm_description "alarmDescription"
+        FROM
+        abnormal_detail
+        WHERE #{id} = alarm_information_id
+        order by  alarm_time
+    </select>
+</mapper>

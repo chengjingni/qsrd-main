@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.PulverizerRunningMapper">
+    <update id="addDay">
+        UPDATE pulverizer_running  SET `day`=`day`+1 WHERE  pulverizer_code =#{pulverizerCode}
+    </update>
+
+
+    <update id="zero">
+        UPDATE pulverizer_running  SET `day`=0 WHERE  pulverizer_code =#{pulverizerCode}
+    </update>
+</mapper>

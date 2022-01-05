@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.BaseDictMapper">
+
+
+    <select id="getSubcollectionCountById" resultType="java.lang.Long">
+        SELECT IFNULL(count(1),0)
+        FROM base_dict
+        WHERE `type` =
+            (SELECT `type`
+             FROM base_dict
+             WHERE id = #{id}
+               AND delete_time IS NULL)
+          AND delete_time IS NULL
+    </select>
+    <select id="existsCountIn" resultType="java.lang.Integer">
+        SELECT IFNULL(count(1),0)
+        FROM base_dict
+        where delete_time IS NULL AND
+        <foreach collection="baseDicts" item="baseDict" open="(" close=")" separator="or">
+            type = #{baseDict.type} and code = #{baseDict.code}
+        </foreach>
+    </select>
+</mapper>

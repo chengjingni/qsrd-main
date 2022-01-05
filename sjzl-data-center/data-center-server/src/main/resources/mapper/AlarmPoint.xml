@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.datacenter.mapper.AlarmPointMapper">
+
+
+    <select id="joinPointList" resultType="com.vdata.cloud.datacenter.vo.AlarmPointVO">
+         SELECT CODE  "code"
+           ,
+
+       VALUE  "value"
+           ,
+           group_concat( ap.pulverizer_point_id ) "pulverizerPointIds"
+       FROM
+           base_dict b
+           LEFT JOIN alarm_point ap ON b.code = ap.alarm_code
+       WHERE
+           type = 'abnormal'
+       GROUP BY
+           CODE,	VALUE
+    </select>
+</mapper>

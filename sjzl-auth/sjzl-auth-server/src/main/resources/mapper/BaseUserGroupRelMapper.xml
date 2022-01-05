@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vdata.cloud.admin.mapper.BaseUserGroupRelMapper">
+
+    <insert id="insertBatch" parameterType="com.vdata.cloud.admin.entity.BaseUserGroupRel">
+        insert into base_user_group_rel(`fk_base_user`,`fk_base_group`,`group_type`) values
+        <foreach collection="list" separator="," item="b">
+            (#{b.fkBaseUser},#{b.fkBaseGroup},#{b.groupType})
+        </foreach>
+    </insert>
+</mapper>

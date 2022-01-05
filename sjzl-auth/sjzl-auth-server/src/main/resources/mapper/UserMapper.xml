@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vdata.cloud.admin.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.vdata.cloud.admin.entity.User">
+        <!--
+          WARNING - @mbggenerated
+        -->
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="nickname" jdbcType="VARCHAR" property="nickname"/>
+        <result column="birthday" jdbcType="VARCHAR" property="birthday"/>
+        <result column="address" jdbcType="VARCHAR" property="address"/>
+        <result column="mobile" jdbcType="VARCHAR" property="mobile"/>
+        <result column="telephone" jdbcType="VARCHAR" property="telephone"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="sex" jdbcType="CHAR" property="sex"/>
+        <result column="status" jdbcType="CHAR" property="status"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="create_time" jdbcType="DATE" property="createTime"/>
+        <result column="create_user_id" jdbcType="VARCHAR" property="createUserId"/>
+        <result column="update_time" jdbcType="DATE" property="updateTime"/>
+        <result column="update_user_id" jdbcType="VARCHAR" property="updateUserId"/>
+    </resultMap>
+
+    <select id="selectMemberByGroupId" resultMap="BaseResultMap">
+        select u.* from base_user u
+        left join base_group_member gm
+        on gm.username = u.id where gm.group_id = #{groupId}
+    </select>
+    <select id="selectLeaderByGroupId" resultMap="BaseResultMap">
+        select u.* from base_user u
+        left join base_group_leader gm
+        on gm.username = u.id where gm.group_id = #{groupId}
+    </select>
+
+    <select id="userList" parameterType="java.util.Map"
+            resultType="com.vdata.cloud.admin.entity.User"
+            flushCache="true">
+        select
+        u.id `id`,
+        u.username `username`,
+        u.nickname `nickname`,
+        u.email `email`,
+        u.sex `sex`,
+        u.status `status`,
+        IFNULL(u.description,'') `description`,
+        u.create_time `createTime`,
+        u.create_user_id `createUserId`,
+        u.update_time `updateTime`,
+        u.update_user_id `updateUserId`
+
+        from base_user u
+        where 1=1
+        <if test="params.appId != null and params.appId != ''">
+            and exists(
+            select fk_base_user from base_user_system_rel
+            where  fk_base_user = u.id)
+        </if>
+        <if test="params.groupId != null and params.groupId != ''">
+            and exists(
+            select fk_base_user from base_user_group_rel
+            where fk_base_group=#{params.groupId} and fk_base_user = u.id)
+        </if>
+        <if test="params.name != null and params.name != ''">
+            and (u.nickname like '%${params.name}%'
+            or u.username like '%${params.name}%')
+        </if>
+    </select>
+    <select id="selectAllById" resultType="java.util.Map">
+            SELECT u.id,u.username,u.nickname as name,u.birthday,u.address,u.mobile,u.telephone,u.email,u.sex,u.description
+			,u.create_Time as createTime,u.update_time as updateTime,
+			(select nickname from base_user b where b.id = u.create_user_id)  as createUserId,
+			(select nickname from base_user b where b.id = u.update_user_id)  as updateUserId,
+			r.fk_base_group as baseGroup  ,t.`code`
+			from base_user u left JOIN base_user_group_rel r on u.id= r.fk_base_user left join base_group_type t on r.group_type = t.id
+			where u.`status` = 1 and u.id= #{id}
+
+
+
+    </select>
+
+</mapper>
