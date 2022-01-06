@@ -225,8 +225,8 @@ public class PulverizerPointController extends BaseUserController {
 
 
         HisPointDataVO hisPointDataVO = new HisPointDataVO();
-        hisPointDataVO.setStartDate("2021-12-13 00:01:00");
-        hisPointDataVO.setEndDate("2021-12-13 00:02:00");
+        hisPointDataVO.setStartDate("2022-01-06 00:00:00");
+        hisPointDataVO.setEndDate("2022-01-06 00:30:00");
         hisPointDataVO.setPointVOs(pointVOS);
 //        pointRunService.pullHisPointData(hisPointDataVO);
         return hisPointDataVO;

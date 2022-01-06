@@ -16,6 +16,7 @@ import com.vdata.cloud.datacenter.vo.PointVO;
 import com.vdata.cloud.datacenter.vo.PulverizerPointRedisVO;
 import com.vdata.cloud.datacenter.vo.QueryHistoryVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
@@ -30,10 +31,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -448,6 +446,153 @@ public class DataCenterTest {
             }
         }
 
+    }
+
+
+    //保存excel中的测点数据  20220105
+    @Test
+    public void savePoint() throws IOException {
+        String freeAbsolutePath =  "D:\\Develop\\JetBrains\\project\\qsrd-main\\sjzl-data-center\\data-center-server\\src\\test\\java\\com\\vdata\\cloud\\datacenter\\repository\\11.txt";
+        Reader in = new FileReader(freeAbsolutePath);
+        Iterator<CSVRecord> iterator = CSVFormat.DEFAULT
+//                                .withHeader(headers)
+                .withQuote(null)
+//                .withFirstRecordAsHeader()
+                .parse(in)
+                .iterator();
+
+        Map<String,List<BaseObj>> map = new HashMap<>();
+
+        while (iterator.hasNext()) {
+            CSVRecord record = iterator.next();
+            String value = record.get(0);
+            String key = record.get(1);
+            if(key.contains("A")){
+                if(!map.containsKey("A")){
+                    map.put("A",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("A").add(baseObj);
+            }
+            else if(key.contains("B")){
+                if(!map.containsKey("B")){
+                    map.put("B",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("B").add(baseObj);
+            }
+            else if(key.contains("C")){
+                if(!map.containsKey("C")){
+                    map.put("C",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("C").add(baseObj);
+            }
+            else if(key.contains("D")){
+                if(!map.containsKey("D")){
+                    map.put("D",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("D").add(baseObj);
+            }
+            else if(key.contains("E")){
+                if(!map.containsKey("E")){
+                    map.put("E",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("E").add(baseObj);
+            }
+            else {
+                if(!map.containsKey("else")){
+                    map.put("else",new ArrayList<BaseObj>());
+                }
+                BaseObj baseObj = new BaseObj();
+                baseObj.key=key;
+                baseObj.value=value;
+                map.get("else").add(baseObj);
+            }
+
+        }
+
+        List<PulverizerPoint>  pulverizerPoints = new ArrayList<>();
+        for (int i = 0; i <5 ; i++) {
+            String key = String.valueOf((char)('A' + i));
+            List<BaseObj> baseObjs = map.get(key).stream().sorted((a,b)->a.key.compareTo(b.key)).collect(Collectors.toList());
+            for (int i1 = 0; i1 < baseObjs.size(); i1++) {
+                int no=i1+1;
+                PulverizerPoint pulverizerPoint = new PulverizerPoint();
+                pulverizerPoint.setPulverizerCode((i+1)+"");
+                BaseObj baseObj = baseObjs.get(i1);
+
+                pulverizerPoint.setPointName(baseObj.key);
+                pulverizerPoint.setDcsDataIdentifier(baseObj.value);
+
+                pulverizerPoint.setNo(no);
+                pulverizerPoints.add(pulverizerPoint);
+            }
+        }
+
+        List<BaseObj> elseObjs = map.get("else").stream().sorted((a, b) -> a.key.compareTo(b.key)).collect(Collectors.toList());
+        for (int i = 0; i < elseObjs.size(); i++) {
+            int no = i+100;
+            for (int j = 0; j < 5; j++) {
+                PulverizerPoint pulverizerPoint = new PulverizerPoint();
+                pulverizerPoint.setPulverizerCode((j+1)+"");
+                BaseObj baseObj = elseObjs.get(i);
+
+                pulverizerPoint.setPointName(baseObj.key);
+                pulverizerPoint.setDcsDataIdentifier(baseObj.value);
+
+                pulverizerPoint.setNo(no);
+                pulverizerPoints.add(pulverizerPoint);
+            }
+
+        }
+
+    /*    for (PulverizerPoint pulverizerPoint : pulverizerPoints) {
+            System.out.println(pulverizerPoint);
+        }*/
+
+
+//        System.out.println(pulverizerPoints.size());
+
+        pulverizerPointService.saveBatch(pulverizerPoints);
+
+
+
+//        pulverizerPointMapper.insert();
+    }
+
+
+    @Test
+    public  void test18(){
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            list.add(i);
+        }
+        List<List<Integer>> partition = ListUtils.partition(list, 10);
+
+        List<Integer> addall = new ArrayList<>();
+        for (int i = 0; i < partition.size(); i++) {
+            addall.addAll(partition.get(i));
+        }
+        System.out.println(addall);
+
+    }
+
+    class BaseObj {
+        String key;
+        String value;
     }
 
 

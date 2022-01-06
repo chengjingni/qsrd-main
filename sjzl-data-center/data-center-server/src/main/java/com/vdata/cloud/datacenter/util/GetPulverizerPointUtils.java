@@ -8,6 +8,9 @@ import com.vdata.cloud.datacenter.entity.DcsServerInfo;
 import com.vdata.cloud.datacenter.entity.SyncPoint;
 import com.vdata.cloud.datacenter.mapper.DcsServerInfoMapper;
 import com.vdata.cloud.datacenter.vo.QueryHistoryVO;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,7 @@ import java.util.stream.Collectors;
  * @Version: 1.0
  */
 @Component
+@Log4j2
 public class GetPulverizerPointUtils {
 
     @Autowired
@@ -158,14 +163,22 @@ public class GetPulverizerPointUtils {
         }
 
 
-        String tagNamesStr = tagNames.stream().collect(Collectors.joining(","));
+        List<Map<String, Object>>  list = new ArrayList<>();
+        //拆分请求 过长请求会出现400错误
+        List<List<String>> partition = ListUtils.partition(tagNames, 100);
+
+        for (List<String> splitTagNames : partition) {
+            String tagNamesStr = splitTagNames.stream().collect(Collectors.joining(","));
 
 
-        String url = baseUrl + "getRTDataByBatch2?tagNames=" + tagNamesStr;
+
+            String url = baseUrl + "getRTDataByBatch2?tagNames=" + tagNamesStr;
+
+
 //        List<Map<String, Object>> resultList = restTemplate.postForEntity(url, request,List.class);
-        List<Map<String, Object>> list = restTemplate.getForObject(url, List.class);
-
-
+            List<Map<String, Object>> resultList = restTemplate.getForObject(url, List.class);
+            list.addAll(resultList);
+        }
         if (list == null || list.size() == 0) {
             throw new BusinessException("接口访问失败 或没有数据");
         }
