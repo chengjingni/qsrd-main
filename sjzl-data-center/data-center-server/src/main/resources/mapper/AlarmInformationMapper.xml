@@ -15,8 +15,8 @@
         pulverizer_point_id "pulverizerPointId",
         pp.point_name "pointName",
         detection_value "detectionValue",
-        pp.pulverizer_code "pulverizerCode",
-        getValue( 'pulverizer' ,pp.pulverizer_code) "pulverizerValue" ,
+        ifnull(pp.pulverizer_code,ai.pulverizer_code) "pulverizerCode",
+        getValue( 'pulverizer' ,ifnull(pp.pulverizer_code,ai.pulverizer_code)) "pulverizerValue" ,
         count "count",
         alarm_description "alarmDescription",
         verify_result "verifyResult",
@@ -56,7 +56,7 @@
         alarm_point a
         LEFT JOIN pulverizer_point p ON pulverizer_point_id = p.id
         WHERE
-        a.pulverizer_code = pp.pulverizer_code
+        a.pulverizer_code = ifnull(pp.pulverizer_code,ai.pulverizer_code)
         AND abnormal_code = alarm_code
         )
         end nos
@@ -73,7 +73,7 @@
         <if test="alarmPageVO.verifyResult!=null and alarmPageVO.verifyResult>0">
             AND ai.verify_result= #{alarmPageVO.verifyResult}
         </if>
-        <if test="alarmPageVO.startDate!=null  and alarmPageVO.startDate!=''">
+        <if test="alarmPageVO.startDate!=null  and alarmPageVO.startDate!=''">查询报警列表失败
             AND STR_TO_DATE(DATE_FORMAT(alarm_time,'%Y-%m-%d'),'%Y-%m-%d') <![CDATA[ >=  ]]>
             STR_TO_DATE(#{alarmPageVO.startDate},'%Y-%m-%d')
         </if>
@@ -279,8 +279,8 @@
         pulverizer_point_id "pulverizerPointId",
         pp.point_name "pointName",
         detection_value "detectionValue",
-        pp.pulverizer_code "pulverizerCode",
-        getValue( 'pulverizer' ,pp.pulverizer_code) "pulverizerValue" ,
+        ifnull(pp.pulverizer_code,ai.pulverizer_code) "pulverizerCode",
+        getValue( 'pulverizer' ,ifnull(pp.pulverizer_code,ai.pulverizer_code)) "pulverizerValue" ,
         count "count",
         alarm_description "alarmDescription",
         verify_result "verifyResult",
@@ -320,7 +320,7 @@
 			alarm_point a
 			LEFT JOIN pulverizer_point p ON pulverizer_point_id = p.id
 		WHERE
-			a.pulverizer_code = pp.pulverizer_code
+			a.pulverizer_code = ifnull(pp.pulverizer_code,ai.pulverizer_code)
 			AND abnormal_code = alarm_code
 		)
 				end  nos

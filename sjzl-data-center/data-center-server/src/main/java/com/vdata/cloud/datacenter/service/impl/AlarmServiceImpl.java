@@ -470,6 +470,9 @@ public class AlarmServiceImpl implements IAlarmService {
         //创建报警信息
         alarmCreate(triggeringAlarmVO);
 
+        //推送报警信息到前端
+
+
 
     }
 
@@ -490,6 +493,9 @@ public class AlarmServiceImpl implements IAlarmService {
         AlarmInformation alarmInformation = alarmInformationMapper.selectOne(wrapper);
         if (alarmInformation == null) {
             alarmInformationMapper.insert(tempAlarmInformation);
+            alarmInformation=tempAlarmInformation;
+            this.pushAlarmInfo(alarmInformation,alarmInformation.getFinishDate());
+
         }
 
         //记录报警次数
@@ -504,6 +510,9 @@ public class AlarmServiceImpl implements IAlarmService {
 //        abnormalDetail.setPulverizerPointId();
         abnormalDetail.setPulverizerCode(alarmInformation.getPulverizerCode());
         abnormalDetailMapper.insert(abnormalDetail);
+
+
+
 
     }
 
