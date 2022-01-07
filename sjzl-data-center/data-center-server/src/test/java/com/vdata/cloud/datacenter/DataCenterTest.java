@@ -31,7 +31,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -569,13 +572,83 @@ public class DataCenterTest {
         pulverizerPointService.saveBatch(pulverizerPoints);
 
 
-
 //        pulverizerPointMapper.insert();
     }
 
 
+    /*
+     * 填充点位信息  20220107
+     * */
     @Test
-    public  void test18(){
+    public void savePoint1() throws IOException {
+        String rootPath = "C:\\Users\\Administrator\\Desktop\\新建文件夹";
+
+        File rootfile = new File(rootPath);
+        File[] files = rootfile.listFiles();
+        Map<String, PointObj> map = new HashMap<>();
+
+        for (File file : files) {
+            if (!file.isDirectory()) {
+                String absolutePath = file.getAbsolutePath();
+                Reader in = new FileReader(absolutePath);
+                Iterator<CSVRecord> iterator = CSVFormat.DEFAULT
+//                                .withHeader(headers)
+                        .withQuote(null)
+                        .withFirstRecordAsHeader()
+                        .parse(in)
+                        .iterator();
+                while (iterator.hasNext()) {
+                    CSVRecord next = iterator.next();
+                    PointObj pointObj = new PointObj();
+                    pointObj.dcs = next.get(0);
+                    pointObj.unit = next.get(2);
+                    pointObj.up = strTfBigDecimal(next.get(3));
+                    pointObj.low = strTfBigDecimal(next.get(4));
+                    map.put(pointObj.dcs, pointObj);
+                }
+            }
+        }
+
+
+        System.out.println(map);
+        System.out.println(map);
+
+        List<PulverizerPoint> pulverizerPoints = pulverizerPointMapper.selectList(null);
+
+        List<PulverizerPoint> collect = pulverizerPoints.stream()
+                .filter(pulverizerPoint -> map.containsKey(pulverizerPoint.getDcsDataIdentifier()))
+                .map(pulverizerPoint -> {
+                    PointObj pointObj = map.get(pulverizerPoint.getDcsDataIdentifier());
+
+                    pulverizerPoint.setUnit(pointObj.unit);
+                    pulverizerPoint.setUpperLimit(pointObj.up);
+                    pulverizerPoint.setLowerLimit(pointObj.low);
+                    return pulverizerPoint;
+                }).collect(Collectors.toList());
+
+        boolean b = pulverizerPointService.updateBatchById(collect);
+        
+
+    }
+
+
+    BigDecimal strTfBigDecimal(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return BigDecimal.valueOf(0);
+        }
+
+        return BigDecimal.valueOf(Double.valueOf(str));
+    }
+
+    class PointObj {
+        String unit;
+        String dcs;
+        BigDecimal up;
+        BigDecimal low;
+    }
+
+    @Test
+    public void test18() {
         List<Integer> list = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             list.add(i);

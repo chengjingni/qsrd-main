@@ -32,6 +32,14 @@
             <if test="obj.positionCode!=null and obj.positionCode!='' ">
                 AND position_code = #{obj.positionCode}
             </if>
+            <if test="obj.dcsDataIdentifier!=null and obj.dcsDataIdentifier!='' ">
+                AND dcs_data_identifier like concat('%',#{obj.dcsDataIdentifier},'%')
+            </if>
+            <if test="obj.pointName!=null and obj.pointName!='' ">
+                AND point_name like concat('%',#{obj.pointName},'%')
+            </if>
+
+
         </where>
         ORDER BY
         `no` ASC

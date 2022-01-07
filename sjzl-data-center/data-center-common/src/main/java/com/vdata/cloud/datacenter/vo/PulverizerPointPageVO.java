@@ -21,4 +21,11 @@ public class PulverizerPointPageVO {
     private long size;
     //所属部位
     private String positionCode;
+
+
+    //dcs搜索
+    private String dcsDataIdentifier;
+
+    //点位名称搜索
+    private String pointName;
 }
