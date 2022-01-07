@@ -66,4 +66,6 @@ public interface IAlarmService {
     Map<String, Map<String, Integer>> hisTrueFaultByPulverizer(AlarmAnalyseQueryVO alarmAnalyseQueryVO);
 
     void export(AlarmPageVO alarmPageVO, HttpServletResponse response) throws IOException;
+
+    void triggeringAlarm(TriggeringAlarmVO triggeringAlarmVO);
 }

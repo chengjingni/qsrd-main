@@ -99,4 +99,10 @@ public class AlarmInformation implements Serializable {
     @TableField("position_code")
     private String positionCode;
 
+
+    //点位代码
+    @ApiModelProperty(value = "点位代码")
+    @TableField("pulverizer_code")
+    private String pulverizerCode;
+
 }

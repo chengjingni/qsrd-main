@@ -287,4 +287,38 @@ public class AlarmController extends BaseUserController {
         }
         return result;
     }
+
+
+    //触发报警
+    @BussinessLog(value = "触发报警")
+    @ApiOperation(value = "触发报警")
+    @RequestMapping(value = "/triggeringAlarm")
+    public DataResult triggeringAlarm(@RequestBody TriggeringAlarmVO triggeringAlarmVO) {
+        DataResult result = new DataResult();
+        try {
+            if (StringUtils.isBlank(triggeringAlarmVO.getKey())) {
+                throw new BusinessException("验证码不能为空");
+            }
+            if (StringUtils.isBlank(triggeringAlarmVO.getWarningCode())) {
+                throw new BusinessException("报警编码不能为空");
+            }
+            if (StringUtils.isBlank(triggeringAlarmVO.getPulverizerCode())) {
+                throw new BusinessException("磨煤机编码不能为空");
+            }
+            alarmService.triggeringAlarm(triggeringAlarmVO);
+            result.setCode(Constants.RETURN_NORMAL);
+            result.setMessage("触发报警成功");
+        } catch (BusinessException e) {
+            result.setCode(Constants.RETURN_UNNORMAL);
+            result.setMessage(e.getMessage());
+            log.error("触发报警失败", e);
+            uLogUtils.save("触发报警失败", Thread.currentThread(), request, e);
+        } catch (Exception e) {
+            result.setCode(Constants.RETURN_UNNORMAL);
+            result.setMessage("触发报警失败");
+            log.error("触发报警失败", e);
+            uLogUtils.save("触发报警失败", Thread.currentThread(), request, e);
+        }
+        return result;
+    }
 }

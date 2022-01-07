@@ -115,7 +115,7 @@ public class GetDataTask {
 
         List<Map<String, Object>> realTimeDatas = getPulverizerPointUtils.getRealTimeDatas(tagNames);
 
-        log.info("realTimeDatas:"+realTimeDatas.size());
+        log.info("realTimeDatas:" + realTimeDatas.size());
 
         List<PulverizerPointTempDataVO> pulverizerPointTempDataVOS = new ArrayList<>();
         for (int i = 0; i < pulverizerPointRedisVOS.size(); i++) {
@@ -139,7 +139,7 @@ public class GetDataTask {
         Map<String, List<PulverizerPointTempDataVO>> pulverizerPointTempDataVOMap = pulverizerPointTempDataVOS.stream()
 //                .collect(Collectors.groupingBy(pulverizerPointTempDataVO -> pulverizerPointTempDataVO.getPulverizerCode() + "|" + pulverizerPointTempDataVO.getTime()));
                 //去除时间分组
-                .collect(Collectors.groupingBy(pulverizerPointTempDataVO -> pulverizerPointTempDataVO.getPulverizerCode() ));
+                .collect(Collectors.groupingBy(pulverizerPointTempDataVO -> pulverizerPointTempDataVO.getPulverizerCode()));
         //磨煤机代码列表
 //        List<String> pulverizerCodes = pulverizerPointTempDataVOMap.keySet().stream().map(s -> s.split("\\|")[0]).distinct().collect(Collectors.toList());
         List<PointRun> pointRunList = new ArrayList<>();
@@ -367,7 +367,6 @@ public class GetDataTask {
 
         return map;
     }
-
 
 
     private void pullWebSocket(PointRun pointRun) {

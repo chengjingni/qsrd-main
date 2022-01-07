@@ -114,7 +114,7 @@ public class AlarmServiceImpl implements IAlarmService {
                         .eq(AlarmInformation::getPulverizerPointId, pulverizerPointId)
                         .eq(AlarmInformation::getAbnormalCode, abnormalCode)
                         //存在没有处理完成则创建
-                        .and(e->e.ne(AlarmInformation::getResultStatus,StatusTypeEnum.PROCESSED.value()).or().isNull(AlarmInformation::getResultStatus))
+                        .and(e -> e.ne(AlarmInformation::getResultStatus, StatusTypeEnum.PROCESSED.value()).or().isNull(AlarmInformation::getResultStatus))
         );
     }
 
@@ -344,7 +344,7 @@ public class AlarmServiceImpl implements IAlarmService {
         //判断是否存在 当前磨煤机未处理的相同报警
         AlarmInformation alarmInformation = this.exists(pulverizerPointId, abnormalCode);
         if (CommonUtil.isEmpty(alarmInformation)) {
-            log.info("不存在报警信息,pulverizerPointId:"+pulverizerPointId+",abnormalCode:"+abnormalCode);
+            log.info("不存在报警信息,pulverizerPointId:" + pulverizerPointId + ",abnormalCode:" + abnormalCode);
             //写入报警表
             alarmInformation = insertAlarmInformation(alarmTime, pulverizerPointId, abnormalCode, alarmDescription, detectionValue, positionCode);
             //写入异常明细表
@@ -455,6 +455,76 @@ public class AlarmServiceImpl implements IAlarmService {
 
         excelWriter.finish();
 
+    }
+
+    @Override
+    @Transactional
+    public void triggeringAlarm(TriggeringAlarmVO triggeringAlarmVO) {
+        //验证校验码是否正确
+        String key = triggeringAlarmVO.getKey();
+        validateKey(key);
+
+        //验证报警代码是否存在
+        String warningCode = triggeringAlarmVO.getWarningCode();
+        existsAlarmCode(warningCode);
+        //创建报警信息
+        alarmCreate(triggeringAlarmVO);
+
+
+    }
+
+    private void alarmCreate(TriggeringAlarmVO triggeringAlarmVO) {
+        AlarmInformation tempAlarmInformation = new AlarmInformation();
+        tempAlarmInformation.setAbnormalCode(triggeringAlarmVO.getWarningCode());
+        tempAlarmInformation.setPulverizerCode(triggeringAlarmVO.getPulverizerCode());
+        tempAlarmInformation.setPossibleCause(triggeringAlarmVO.getPossibleCause());
+        tempAlarmInformation.setProposal(triggeringAlarmVO.getProposal());
+        tempAlarmInformation.setCount(1);
+
+        //判断当前报警信息是否存在
+        LambdaQueryWrapper<AlarmInformation> wrapper = new LambdaQueryWrapper<>();
+
+        wrapper.eq(AlarmInformation::getAbnormalCode, triggeringAlarmVO.getWarningCode())
+                .eq(AlarmInformation::getPulverizerCode, triggeringAlarmVO.getPulverizerCode())
+                .and(e -> e.ne(AlarmInformation::getResultStatus, StatusTypeEnum.PROCESSED.value()).or().isNull(AlarmInformation::getResultStatus));
+        AlarmInformation alarmInformation = alarmInformationMapper.selectOne(wrapper);
+        if (alarmInformation == null) {
+            alarmInformationMapper.insert(tempAlarmInformation);
+        }
+
+        //记录报警次数
+        alarmInformationMapper.augmentCount(alarmInformation.getId());
+
+        //插入异常明细表
+        AbnormalDetail abnormalDetail = new AbnormalDetail();
+        abnormalDetail.setAbnormalCode(alarmInformation.getAbnormalCode());
+        abnormalDetail.setAlarmDescription(alarmInformation.getPossibleCause() + "|" + alarmInformation.getPossibleCause());
+        abnormalDetail.setAlarmInformationId(alarmInformation.getId());
+        abnormalDetail.setAlarmTime(new Date());
+//        abnormalDetail.setPulverizerPointId();
+        abnormalDetail.setPulverizerCode(alarmInformation.getPulverizerCode());
+        abnormalDetailMapper.insert(abnormalDetail);
+
+    }
+
+    //验证报警代码是否存在
+    private void existsAlarmCode(String warningCode) {
+        BaseDict baseDict = new BaseDict();
+        baseDict.setType("abnormal");
+        baseDict.setCode(warningCode);
+        LambdaQueryWrapper<BaseDict> wrapper = new LambdaQueryWrapper();
+        wrapper.eq(BaseDict::getType, baseDict.getType())
+                .eq(BaseDict::getCode, baseDict.getCode())
+                .isNull(BaseDict::getDeleteTime);
+        int count = baseDictService.count(wrapper);
+        if (count == 0) {
+            throw new BusinessException("报警代码不存在");
+        }
+    }
+
+    private void validateKey(String key) {
+
+        // TODO: 2022/1/6 验证逻辑未实现
     }
 
 
