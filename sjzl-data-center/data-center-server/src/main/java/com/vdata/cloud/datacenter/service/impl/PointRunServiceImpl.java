@@ -373,6 +373,20 @@ public class PointRunServiceImpl implements IPointRunService {
 
     }
 
+    @Override
+    public void deleteDataByYearUp(int year) {
+        //获得当前时间
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -year);
+
+        Date time = calendar.getTime();
+
+        Query query = new Query();
+        //todo  删除条件还没写完
+        query.addCriteria(Criteria.where("date").lt(time));
+        mongoTemplate.remove(query, PointRun.class);
+    }
+
 
     @Override
 //    @Async

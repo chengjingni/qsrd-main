@@ -32,4 +32,11 @@ public interface IPointRunService {
 
     void hourStat(long oldtime, long currentTime) throws ParseException;
 
+    /**
+     * 删除指定年前的数据
+     *
+     * @param year
+     */
+    void deleteDataByYearUp(int year);
+
 }

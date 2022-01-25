@@ -22,4 +22,8 @@ public class RealTimeAlarmVO {
     private String running;
     //报警数
     private String count;
+
+
+    //磨煤机编码
+    private String code;
 }

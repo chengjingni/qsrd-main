@@ -123,6 +123,11 @@ public class AlarmServiceImpl implements IAlarmService {
     @Transactional
     public void manage(AlarmInformation iAlarmInformation, UserVO user) {
         Integer resultStatus = iAlarmInformation.getResultStatus();
+
+
+        if (resultStatus == null || resultStatus < 1) {
+            throw new BusinessException("传入数据有误");
+        }
         Integer verifyResult = iAlarmInformation.getVerifyResult();
         String description = iAlarmInformation.getProcessDescription();
 
@@ -150,7 +155,9 @@ public class AlarmServiceImpl implements IAlarmService {
 
         alarmInformation.setAbnormalCode(selectAlarmInformation.getAbnormalCode());
 
-        alarmInformationMapper.updateById(iAlarmInformation);
+        alarmInformation.setFinishDate(finishDate);
+
+        alarmInformationMapper.updateById(alarmInformation);
         pushAlarmInfo(alarmInformation, finishDate);
 
 
@@ -394,7 +401,15 @@ public class AlarmServiceImpl implements IAlarmService {
 
         IPage<AlarmInformationVO> page = this.page(alarmPageVO);
         excelWriter = EasyExcel.write(response.getOutputStream()).build();
-        List<List<String>> head = Arrays.asList("#", "报警时间", "故障类型", "所属磨煤机", "所属部位", "点位名称", "可能原因", "处理建议", "报警次数", "处理状态", "处理结果", "处理描述", "处理时间")
+ /*       List<List<String>> head = Arrays.asList("#", "报警时间", "故障类型", "所属磨煤机", "所属部位", "点位名称", "可能原因", "处理建议", "报警次数", "处理状态", "处理结果", "处理描述", "处理时间")
+                .stream().map(field -> {
+                    List<String> fieldL = new ArrayList<String>();
+                    fieldL.add(field);
+                    return fieldL;
+                }).collect(Collectors.toList());*/
+
+
+        List<List<String>> head = Arrays.asList("#", "报警时间", "故障类型", "所属磨煤机", "所属部位", "点位名称", "可能原因", "处理建议", "处理状态", "处理结果", "处理时间")
                 .stream().map(field -> {
                     List<String> fieldL = new ArrayList<String>();
                     fieldL.add(field);
@@ -434,7 +449,7 @@ public class AlarmServiceImpl implements IAlarmService {
         for (int i = 0; i < records.size(); i++) {
             AlarmInformationVO alarmInformationVO = records.get(i);
             List<Object> tempData = new ArrayList<>();
-            tempData.add(i);
+            tempData.add(i + 1);
             tempData.add(alarmInformationVO.getAlarmTime());
             tempData.add(alarmInformationVO.getAbnormalValue());
             tempData.add(alarmInformationVO.getPulverizerValue());
@@ -442,10 +457,10 @@ public class AlarmServiceImpl implements IAlarmService {
             tempData.add(alarmInformationVO.getPointName());
             tempData.add(alarmInformationVO.getPossibleCause());
             tempData.add(alarmInformationVO.getProposal());
-            tempData.add(alarmInformationVO.getCount());
+//            tempData.add(alarmInformationVO.getCount());
             tempData.add(alarmInformationVO.getResultStatusValue());
             tempData.add(alarmInformationVO.getVerifyResultValue());
-            tempData.add(alarmInformationVO.getProcessDescription());
+//            tempData.add(alarmInformationVO.getProcessDescription());
             tempData.add(alarmInformationVO.getFinishDate());
 
             data.add(tempData);
@@ -470,9 +485,6 @@ public class AlarmServiceImpl implements IAlarmService {
         //创建报警信息
         alarmCreate(triggeringAlarmVO);
 
-        //推送报警信息到前端
-
-
 
     }
 
@@ -482,6 +494,7 @@ public class AlarmServiceImpl implements IAlarmService {
         tempAlarmInformation.setPulverizerCode(triggeringAlarmVO.getPulverizerCode());
         tempAlarmInformation.setPossibleCause(triggeringAlarmVO.getPossibleCause());
         tempAlarmInformation.setProposal(triggeringAlarmVO.getProposal());
+        tempAlarmInformation.setPositionCode(triggeringAlarmVO.getPositionCode());
         tempAlarmInformation.setCount(1);
 
         //判断当前报警信息是否存在
@@ -493,8 +506,8 @@ public class AlarmServiceImpl implements IAlarmService {
         AlarmInformation alarmInformation = alarmInformationMapper.selectOne(wrapper);
         if (alarmInformation == null) {
             alarmInformationMapper.insert(tempAlarmInformation);
-            alarmInformation=tempAlarmInformation;
-            this.pushAlarmInfo(alarmInformation,alarmInformation.getFinishDate());
+            alarmInformation = tempAlarmInformation;
+            this.pushAlarmInfo(alarmInformation, alarmInformation.getFinishDate());
 
         }
 
@@ -510,8 +523,6 @@ public class AlarmServiceImpl implements IAlarmService {
 //        abnormalDetail.setPulverizerPointId();
         abnormalDetail.setPulverizerCode(alarmInformation.getPulverizerCode());
         abnormalDetailMapper.insert(abnormalDetail);
-
-
 
 
     }

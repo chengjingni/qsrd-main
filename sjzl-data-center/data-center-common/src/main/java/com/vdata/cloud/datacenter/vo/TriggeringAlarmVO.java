@@ -25,4 +25,7 @@ public class TriggeringAlarmVO {
     //处理建议
     private String proposal;
 
+    //所属部位
+    private String positionCode;
+
 }

@@ -25,7 +25,6 @@ import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -48,7 +47,7 @@ import static java.math.BigDecimal.ROUND_HALF_UP;
  */
 @Log4j2
 @Component
-@EnableScheduling
+//@EnableScheduling
 public class ImitateTask {
     @Autowired
     private MongoTemplate mongoTemplate;
